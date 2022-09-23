@@ -1,4 +1,4 @@
-package no.nav.tms.dokstatus.mottak
+package no.nav.tms.doknotstatus.converter
 
 import io.ktor.application.call
 import io.ktor.application.install
