@@ -1,1 +1,1 @@
-rootProject.name = "tms-doknotstatus-mottak"
+rootProject.name = "tms-doknotstatus-converter"

@@ -1,13 +1,13 @@
 apiVersion: "nais.io/v1alpha1"
 kind: "Application"
 metadata:
-  name: tms-doknotstatus-mottak
+  name: tms-doknotstatus-converter
   namespace: min-side
   labels:
     team: min-side
 spec:
   envFrom:
-    - secret: tms-doknotstatus-mottak-secrets
+    - secret: tms-doknotstatus-converter-secrets
   image: {{version}}
   port: 8080
   liveness:

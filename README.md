@@ -1,4 +1,4 @@
-# tms-doknotstatus-mottak
+# tms-doknotstatus-converter
 
 Leser status på ekstern varsling av brukervarsler fra doknotifikasjonstatus-topic (avro), og sender videre på internt json-format.
 
