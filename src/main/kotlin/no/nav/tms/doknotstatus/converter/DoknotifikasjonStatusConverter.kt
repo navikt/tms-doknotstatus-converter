@@ -20,6 +20,7 @@ import kotlin.coroutines.CoroutineContext
 class DoknotifikasjonStatusConverter(
     private val consumer: Consumer<String, DoknotifikasjonStatus>,
     private val producer: Producer<String, String>,
+    private val doknotifikasjonStatusTopic: String,
     private val brukervarselTopic: String
 ) : CoroutineScope {
 
@@ -43,6 +44,7 @@ class DoknotifikasjonStatusConverter(
     }
 
     private fun run() {
+        consumer.subscribe(listOf(doknotifikasjonStatusTopic))
         while (job.isActive) {
             onRecords(consumer.poll(Duration.ofSeconds(1)))
         }
@@ -78,4 +80,3 @@ class DoknotifikasjonStatusConverter(
         }
     }
 }
-

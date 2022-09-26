@@ -30,7 +30,8 @@ fun main() {
     val doknotifikasjonStatusConverter = DoknotifikasjonStatusConverter(
         consumer = doknotConsumer,
         producer = brukerVarselProducer,
-        brukervarselTopic = environment.doknotifikasjonStatusTopicName
+        brukervarselTopic = environment.brukervarselTopic,
+        doknotifikasjonStatusTopic = environment.doknotifikasjonStatusTopicName
     )
 
     embeddedServer(Netty, port = 8080) {
