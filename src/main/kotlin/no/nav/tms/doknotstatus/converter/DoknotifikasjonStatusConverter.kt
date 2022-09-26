@@ -64,6 +64,7 @@ class DoknotifikasjonStatusConverter(
                         objectMapper.writeValueAsString(eksternVarselStatus)
                     )
                 )
+                logger.info("Sendt eksternvarselstatus for varsel $key")
             }
             consumer.commitSync()
         } catch (re: RetriableException) {
