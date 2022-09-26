@@ -6,9 +6,11 @@ import io.netty.util.NetUtil
 import no.nav.personbruker.dittnav.common.util.config.StringEnvVar.getEnvVar
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.consumer.ConsumerConfig
+import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.config.SaslConfigs
 import org.apache.kafka.common.config.SslConfigs
 import org.apache.kafka.common.serialization.StringDeserializer
+import org.apache.kafka.common.serialization.StringSerializer
 import java.net.InetSocketAddress
 import java.util.Properties
 
@@ -18,6 +20,7 @@ data class Environment(
     val aivenSchemaRegistry: String = getEnvVar("KAFKA_SCHEMA_REGISTRY"),
     val doknotifikasjonStatusGroupId: String = getEnvVar("GROUP_ID_DOKNOTIFIKASJON_STATUS"),
     val doknotifikasjonStatusTopicName: String = getEnvVar("DOKNOTIFIKASJON_STATUS_TOPIC"),
+    val brukervarselTopic: String = getEnvVar("BRUKERVARSEL_TOPIC"),
     val aivenTruststorePath: String = getEnvVar("KAFKA_TRUSTSTORE_PATH"),
     val aivenKeystorePath: String = getEnvVar("KAFKA_KEYSTORE_PATH"),
     val aivenCredstorePassword: String = getEnvVar("KAFKA_CREDSTORE_PASSWORD"),
@@ -35,6 +38,19 @@ data class Environment(
             put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer::class.java)
             put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, SwallowSerializationErrorsAvroDeserializer::class.java)
             put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, true)
+            putAll(credentialPropsAiven())
+        }
+    }
+
+    fun producerProps(): Properties {
+        return Properties().apply {
+            put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, aivenBrokers)
+            put(ProducerConfig.CLIENT_ID_CONFIG, "tms-doknotstatus-converter" + NetUtil.getHostname(InetSocketAddress(0)))
+            put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer::class.java)
+            put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer::class.java)
+            put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 40000)
+            put(ProducerConfig.ACKS_CONFIG, "all")
+            put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true")
             putAll(credentialPropsAiven())
         }
     }

@@ -22,7 +22,7 @@ class DoknotifikasjonStatusConverterTest {
 
     @Test
     fun `Konverter doknotstatus-melding til intern river-melding`() {
-        val doknotifikasjonStatusConverter = DoknotifikasjonStatusConverter(doknotKafkaConsumer, riverProducer)
+        val doknotifikasjonStatusConverter = DoknotifikasjonStatusConverter(doknotKafkaConsumer, riverProducer, "brukerVarselTopic")
 
         val doknotStatus = createDoknotifikasjonStatus("123")
 
