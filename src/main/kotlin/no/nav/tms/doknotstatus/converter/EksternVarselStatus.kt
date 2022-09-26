@@ -31,9 +31,8 @@ data class EksternVarselStatus(
             }
         }
 
-        private val kanalMeldingPattern = "notifikasjon sendt via (\\w+)".toRegex()
-
         private fun parseKanal(melding: String): String? {
+            val kanalMeldingPattern = "notifikasjon sendt via (\\w+)".toRegex()
             return kanalMeldingPattern.find(melding)?.destructured?.let { (kanal) ->
                 kanal.uppercase()
             }

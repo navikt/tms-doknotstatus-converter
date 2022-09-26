@@ -1,5 +1,6 @@
 package no.nav.tms.doknotstatus.converter
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
 import no.nav.doknotifikasjon.schemas.DoknotifikasjonStatus
@@ -43,13 +44,21 @@ class DoknotifikasjonStatusConverterTest {
         }
 
         riverProducer.history().size shouldBe 1
+        val eksternVarselStatusJson = ObjectMapper().readTree(riverProducer.history().first().value())
+        eksternVarselStatusJson["eventId"].asText() shouldBe doknotStatus.getBestillingsId()
+        eksternVarselStatusJson["bestillerAppnavn"].asText() shouldBe doknotStatus.getBestillerId()
+        eksternVarselStatusJson["status"].asText() shouldBe doknotStatus.getStatus()
+        eksternVarselStatusJson["melding"].asText() shouldBe doknotStatus.getMelding()
+        eksternVarselStatusJson["distribusjonsId"].asLong() shouldBe doknotStatus.getDistribusjonId()
+        eksternVarselStatusJson["kanaler"].first().asText() shouldBe "MAIL"
+        eksternVarselStatusJson["antallOppdateringer"].asInt() shouldBe 1
     }
 
     private fun createDoknotifikasjonStatus(
         bestillingsId: String,
         bestiller: String = "dummyBestiller",
         status: String = "INFO",
-        melding: String = "dummyMelding",
+        melding: String = "notifikasjon sendt via mail",
         distribusjonsId: Long = 1L
     ): DoknotifikasjonStatus {
         return DoknotifikasjonStatus.newBuilder()
