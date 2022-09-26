@@ -1,6 +1,7 @@
 package no.nav.tms.doknotstatus.converter
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ObjectNode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -57,11 +58,14 @@ class DoknotifikasjonStatusConverter(
             records.onEach { record ->
                 val key = record.value().getBestillingsId()
                 val eksternVarselStatus = EksternVarselStatus(record.value())
+                val valueNode = objectMapper.valueToTree<ObjectNode>(eksternVarselStatus)
+                valueNode.put("@event_name", "eksternvarselstatus")
+
                 producer.send(
                     ProducerRecord(
                         brukervarselTopic,
                         key,
-                        objectMapper.writeValueAsString(eksternVarselStatus)
+                        valueNode.toString()
                     )
                 )
                 logger.info("Sendt eksternvarselstatus for varsel $key")

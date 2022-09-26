@@ -50,6 +50,8 @@ class DoknotifikasjonStatusConverterTest {
 
         riverProducer.history().size shouldBe 1
         val eksternVarselStatusJson = ObjectMapper().readTree(riverProducer.history().first().value())
+        eksternVarselStatusJson.has("@event_name") shouldBe true
+        eksternVarselStatusJson["@event_name"].asText() shouldBe "eksternvarselstatus"
         eksternVarselStatusJson["eventId"].asText() shouldBe doknotStatus.getBestillingsId()
         eksternVarselStatusJson["bestillerAppnavn"].asText() shouldBe doknotStatus.getBestillerId()
         eksternVarselStatusJson["status"].asText() shouldBe doknotStatus.getStatus()
