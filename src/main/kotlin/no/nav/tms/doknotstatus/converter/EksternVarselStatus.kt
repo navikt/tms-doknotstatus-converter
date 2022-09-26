@@ -21,15 +21,8 @@ data class EksternVarselStatus(
     )
 
     companion object {
-        private fun getKanaler(external: DoknotifikasjonStatus): List<String> {
-            val kanal = parseKanal(external.getMelding())
-
-            return if (kanal != null) {
-                listOf(kanal)
-            } else {
-                emptyList()
-            }
-        }
+        private fun getKanaler(external: DoknotifikasjonStatus): List<String> =
+            listOfNotNull(parseKanal(external.getMelding()))
 
         private fun parseKanal(melding: String): String? {
             val kanalMeldingPattern = "notifikasjon sendt via (\\w+)".toRegex()

@@ -11,7 +11,7 @@ import org.apache.kafka.clients.consumer.Consumer
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.clients.producer.ProducerRecord
-import org.apache.kafka.common.errors.WakeupException
+import org.apache.kafka.common.errors.RetriableException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -21,9 +21,17 @@ class DoknotifikasjonStatusConverter(
     private val consumer: Consumer<String, DoknotifikasjonStatus>,
     private val producer: Producer<String, String>,
     private val brukervarselTopic: String
-): CoroutineScope {
+) : CoroutineScope {
+
     private val logger: Logger = LoggerFactory.getLogger(DoknotifikasjonStatusConverter::class.java)
-    val objectMapper = ObjectMapper()
+    private val objectMapper = ObjectMapper()
+
+    override val coroutineContext: CoroutineContext
+        get() = Dispatchers.IO + job
+    private val job: Job = Job()
+
+    fun isAlive() = job.isActive
+
     fun startPolling() {
         launch {
             run()
@@ -34,24 +42,9 @@ class DoknotifikasjonStatusConverter(
         job.cancelAndJoin()
     }
 
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.IO + job
-    private val job: Job = Job()
-
-    fun isAlive() = job.isActive
-
     private fun run() {
-        try {
-            while (job.isActive) {
-                onRecords(consumer.poll(Duration.ofSeconds(1)))
-            }
-        } catch (e: WakeupException) {
-            if (job.isActive) throw e
-        } catch (e: Exception) {
-            logger.error( "Noe feil skjedde i consumeringen" , e)
-            throw e
-        } finally {
-            closeResources()
+        while (job.isActive) {
+            onRecords(consumer.poll(Duration.ofSeconds(1)))
         }
     }
 
@@ -62,14 +55,17 @@ class DoknotifikasjonStatusConverter(
             records.onEach { record ->
                 val key = record.value().getBestillingsId()
                 val eksternVarselStatus = EksternVarselStatus(record.value())
-                producer.send(ProducerRecord(
-                    brukervarselTopic,
-                    key,
-                    objectMapper.writeValueAsString(eksternVarselStatus)
-                ))
+                producer.send(
+                    ProducerRecord(
+                        brukervarselTopic,
+                        key,
+                        objectMapper.writeValueAsString(eksternVarselStatus)
+                    )
+                )
             }
             consumer.commitSync()
-        } catch (err: Exception) {
+        } catch (re: RetriableException) {
+            logger.warn("Polling mot Kafka feilet, ruller tilbake lokalt offset", re)
             consumer.rollbackToLastCommitted()
         }
     }
@@ -79,20 +75,6 @@ class DoknotifikasjonStatusConverter(
         val partitionCommittedInfo = committed(assignedPartitions)
         partitionCommittedInfo.forEach { (partition, lastCommitted) ->
             seek(partition, lastCommitted.offset())
-        }
-    }
-
-    private fun closeResources() {
-        tryAndLog(producer::close)
-        tryAndLog(consumer::unsubscribe)
-        tryAndLog(consumer::close)
-    }
-
-    private fun tryAndLog(block: () -> Unit) {
-        try {
-            block()
-        } catch (err: Exception) {
-            logger.error(err.message, err)
         }
     }
 }
