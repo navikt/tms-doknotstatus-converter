@@ -32,7 +32,7 @@ dependencies {
 }
 
 application {
-    mainClass.set("no.nav.tms.dokstatus.converter.ApplicationKt")
+    mainClass.set("no.nav.tms.doknotstatus.converter.ApplicationKt")
 
 }
 
