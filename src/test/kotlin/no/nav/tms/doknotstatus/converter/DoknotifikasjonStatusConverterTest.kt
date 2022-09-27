@@ -58,7 +58,6 @@ class DoknotifikasjonStatusConverterTest {
         eksternVarselStatusJson["melding"].asText() shouldBe doknotStatus.getMelding()
         eksternVarselStatusJson["distribusjonsId"].asLong() shouldBe doknotStatus.getDistribusjonId()
         eksternVarselStatusJson["kanaler"].first().asText() shouldBe "MAIL"
-        eksternVarselStatusJson["antallOppdateringer"].asInt() shouldBe 1
     }
 
     private fun createDoknotifikasjonStatus(

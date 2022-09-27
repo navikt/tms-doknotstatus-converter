@@ -8,8 +8,7 @@ data class EksternVarselStatus(
     val status: String,
     val melding: String,
     val distribusjonsId: Long?,
-    val kanaler: List<String>,
-    val antallOppdateringer: Int = 1
+    val kanaler: List<String>
 ) {
     constructor(doknotifikasjonStatus: DoknotifikasjonStatus) : this(
         eventId = doknotifikasjonStatus.getBestillingsId(),
