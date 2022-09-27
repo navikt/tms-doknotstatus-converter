@@ -68,7 +68,6 @@ class DoknotifikasjonStatusConverter(
                         valueNode.toString()
                     )
                 )
-                logger.info("Sendt eksternvarslingstatus for varsel $key")
             }
             consumer.commitSync()
         } catch (re: RetriableException) {
