@@ -2,7 +2,7 @@ package no.nav.tms.doknotstatus.converter
 
 import no.nav.doknotifikasjon.schemas.DoknotifikasjonStatus
 
-data class EksternVarselStatus(
+data class EksternVarslingStatus(
     val eventId: String,
     val bestillerAppnavn: String,
     val status: String,

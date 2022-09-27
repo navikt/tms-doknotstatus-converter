@@ -57,9 +57,9 @@ class DoknotifikasjonStatusConverter(
         try {
             records.onEach { record ->
                 val key = record.value().getBestillingsId()
-                val eksternVarselStatus = EksternVarselStatus(record.value())
-                val valueNode = objectMapper.valueToTree<ObjectNode>(eksternVarselStatus)
-                valueNode.put("@event_name", "eksternvarselstatus")
+                val eksternVarslingStatus = EksternVarslingStatus(record.value())
+                val valueNode = objectMapper.valueToTree<ObjectNode>(eksternVarslingStatus)
+                valueNode.put("@event_name", "eksternVarslingStatus")
 
                 producer.send(
                     ProducerRecord(
@@ -68,7 +68,7 @@ class DoknotifikasjonStatusConverter(
                         valueNode.toString()
                     )
                 )
-                logger.info("Sendt eksternvarselstatus for varsel $key")
+                logger.info("Sendt eksternvarslingstatus for varsel $key")
             }
             consumer.commitSync()
         } catch (re: RetriableException) {

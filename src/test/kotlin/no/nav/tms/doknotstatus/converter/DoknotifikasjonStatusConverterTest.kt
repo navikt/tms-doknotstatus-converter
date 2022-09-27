@@ -49,15 +49,15 @@ class DoknotifikasjonStatusConverterTest {
         }
 
         riverProducer.history().size shouldBe 1
-        val eksternVarselStatusJson = ObjectMapper().readTree(riverProducer.history().first().value())
-        eksternVarselStatusJson.has("@event_name") shouldBe true
-        eksternVarselStatusJson["@event_name"].asText() shouldBe "eksternvarselstatus"
-        eksternVarselStatusJson["eventId"].asText() shouldBe doknotStatus.getBestillingsId()
-        eksternVarselStatusJson["bestillerAppnavn"].asText() shouldBe doknotStatus.getBestillerId()
-        eksternVarselStatusJson["status"].asText() shouldBe doknotStatus.getStatus()
-        eksternVarselStatusJson["melding"].asText() shouldBe doknotStatus.getMelding()
-        eksternVarselStatusJson["distribusjonsId"].asLong() shouldBe doknotStatus.getDistribusjonId()
-        eksternVarselStatusJson["kanaler"].first().asText() shouldBe "MAIL"
+        val eksternVarslingStatusJson = ObjectMapper().readTree(riverProducer.history().first().value())
+        eksternVarslingStatusJson.has("@event_name") shouldBe true
+        eksternVarslingStatusJson["@event_name"].asText() shouldBe "eksternVarslingStatus"
+        eksternVarslingStatusJson["eventId"].asText() shouldBe doknotStatus.getBestillingsId()
+        eksternVarslingStatusJson["bestillerAppnavn"].asText() shouldBe doknotStatus.getBestillerId()
+        eksternVarslingStatusJson["status"].asText() shouldBe doknotStatus.getStatus()
+        eksternVarslingStatusJson["melding"].asText() shouldBe doknotStatus.getMelding()
+        eksternVarslingStatusJson["distribusjonsId"].asLong() shouldBe doknotStatus.getDistribusjonId()
+        eksternVarslingStatusJson["kanaler"].first().asText() shouldBe "MAIL"
     }
 
     private fun createDoknotifikasjonStatus(
