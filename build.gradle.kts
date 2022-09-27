@@ -18,7 +18,7 @@ repositories {
 }
 
 dependencies {
-    implementation(DittNAV.Common.influxdb)
+    implementation("com.github.navikt:doknotifikasjon-schemas:1.2022.06.07-10.21-210529ac5c88")
     implementation(DittNAV.Common.utils)
     implementation(DittNAV.Common.logging)
     implementation(Kafka.Confluent.avroSerializer)
@@ -32,7 +32,7 @@ dependencies {
 }
 
 application {
-    mainClass.set("no.nav.tms.dokstatus.mottak.ApplicationKt")
+    mainClass.set("no.nav.tms.doknotstatus.converter.ApplicationKt")
 
 }
 
