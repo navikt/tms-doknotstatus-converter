@@ -14,11 +14,13 @@ import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.errors.RetriableException
+import org.apache.kafka.common.record.TimestampType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
+import java.time.ZoneId
 import kotlin.coroutines.CoroutineContext
 
 class DoknotifikasjonStatusConverter(
@@ -88,5 +90,11 @@ class DoknotifikasjonStatusConverter(
         }
     }
 
-    private fun ConsumerRecord<*, *>.eventTime() = LocalDateTime.from(Instant.ofEpochMilli(timestamp()))
+    private fun ConsumerRecord<*, *>.eventTime(): LocalDateTime {
+        return if (timestampType() == TimestampType.NO_TIMESTAMP_TYPE) {
+            return LocalDateTime.now(ZoneId.of("UTC"))
+        } else {
+            LocalDateTime.ofInstant(Instant.ofEpochMilli(timestamp()), ZoneId.of("UTC"))
+        }
+    }
 }
