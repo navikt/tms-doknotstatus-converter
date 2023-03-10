@@ -8,7 +8,8 @@ data class EksternVarslingStatus(
     val status: String,
     val melding: String,
     val distribusjonsId: Long?,
-    val kanaler: List<String>
+    val kanaler: List<String>,
+    val kanal: String?
 ) {
     constructor(doknotifikasjonStatus: DoknotifikasjonStatus) : this(
         eventId = doknotifikasjonStatus.getBestillingsId(),
@@ -16,7 +17,8 @@ data class EksternVarslingStatus(
         status = doknotifikasjonStatus.getStatus(),
         melding = doknotifikasjonStatus.getMelding(),
         distribusjonsId = doknotifikasjonStatus.getDistribusjonId(),
-        kanaler = getKanaler(doknotifikasjonStatus)
+        kanaler = getKanaler(doknotifikasjonStatus),
+        kanal = parseKanal(doknotifikasjonStatus.getMelding())
     )
 
     companion object {
