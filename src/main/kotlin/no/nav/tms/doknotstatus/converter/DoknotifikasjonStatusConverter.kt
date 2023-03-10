@@ -9,6 +9,7 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import no.nav.doknotifikasjon.schemas.DoknotifikasjonStatus
 import org.apache.kafka.clients.consumer.Consumer
+import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.clients.producer.ProducerRecord
@@ -16,6 +17,8 @@ import org.apache.kafka.common.errors.RetriableException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
+import java.time.Instant
+import java.time.LocalDateTime
 import kotlin.coroutines.CoroutineContext
 
 class DoknotifikasjonStatusConverter(
@@ -60,6 +63,7 @@ class DoknotifikasjonStatusConverter(
                 val eksternVarslingStatus = EksternVarslingStatus(record.value())
                 val valueNode = objectMapper.valueToTree<ObjectNode>(eksternVarslingStatus)
                 valueNode.put("@event_name", "eksternVarslingStatus")
+                valueNode.put("tidspunkt", record.eventTime().toString())
 
                 producer.send(
                     ProducerRecord(
@@ -83,4 +87,6 @@ class DoknotifikasjonStatusConverter(
             seek(partition, lastCommitted.offset())
         }
     }
+
+    private fun ConsumerRecord<*, *>.eventTime() = LocalDateTime.from(Instant.ofEpochMilli(timestamp()))
 }
