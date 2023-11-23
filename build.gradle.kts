@@ -14,16 +14,20 @@ tasks.withType<KotlinCompile> {
 repositories {
     mavenCentral()
     maven("https://packages.confluent.io/maven")
-    maven("https://jitpack.io")
+    maven("https://maven.pkg.github.com/navikt/*") {
+        credentials {
+            username = System.getenv("GITHUB_ACTOR")?: "x-access-token"
+            password = System.getenv("GITHUB_TOKEN")?: project.findProperty("githubPassword") as String
+        }
+    }
+    mavenLocal()
 }
 
 dependencies {
-    implementation("com.github.navikt:doknotifikasjon-schemas:1.2022.06.07-10.21-210529ac5c88")
-    implementation(DittNAV.Common.utils)
-    implementation(DittNAV.Common.logging)
-    implementation(Kafka.Confluent.avroSerializer)
-    implementation(Ktor.serverNetty)
-    implementation(Logback.classic)
+    implementation(Doknotifikasjon.schemas)
+    implementation(TmsCommonLib.utils)
+    implementation(Avro.avroSerializer)
+    implementation(Ktor.Server.netty)
     implementation(Logstash.logbackEncoder)
 
     testImplementation(kotlin("test"))
@@ -33,7 +37,6 @@ dependencies {
 
 application {
     mainClass.set("no.nav.tms.doknotstatus.converter.ApplicationKt")
-
 }
 
 tasks {

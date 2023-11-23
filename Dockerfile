@@ -6,7 +6,3 @@ ENV JAVA_OPTS="-XX:MaxRAMPercentage=75 \
                -XX:HeapDumpPath=/oom-dump.hprof"
 ENV PORT=8080
 EXPOSE $PORT
-
-USER root
-RUN apt-get install -y curl
-USER apprunner
