@@ -6,10 +6,10 @@ import io.ktor.server.application.ApplicationStopPreparing
 import io.ktor.server.application.call
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.engine.*
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
-import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import kotlinx.coroutines.runBlocking
 import no.nav.doknotifikasjon.schemas.DoknotifikasjonStatus
@@ -32,33 +32,45 @@ fun main() {
         doknotifikasjonStatusTopic = environment.doknotifikasjonStatusTopicName
     )
 
-    embeddedServer(Netty, port = 8080) {
-        routing {
-            get("/isAlive") {
-                if(doknotifikasjonStatusConverter.isAlive()) {
-                    call.respondText(text = "ALIVE", contentType = ContentType.Text.Plain)
-                } else {
-                    call.respondText(text = "NOTALIVE", contentType = ContentType.Text.Plain, HttpStatusCode.ServiceUnavailable)
+    embeddedServer(
+        factory = Netty,
+        environment = applicationEngineEnvironment {
+            module {
+                routing {
+                    get("/isAlive") {
+                        if(doknotifikasjonStatusConverter.isAlive()) {
+                            call.respondText(text = "ALIVE", contentType = ContentType.Text.Plain)
+                        } else {
+                            call.respondText(text = "NOTALIVE", contentType = ContentType.Text.Plain, HttpStatusCode.ServiceUnavailable)
+                        }
+                    }
+
+                    get("/isReady") {
+                        call.respondText(text = "READY", contentType = ContentType.Text.Plain)
+                    }
+                }
+
+                this.environment.monitor.subscribe(ApplicationStarted) {
+                    doknotifikasjonStatusConverter.startPolling()
+                }
+
+                this.environment.monitor.subscribe(ApplicationStopPreparing) {
+                    brukerVarselProducer.shutdown()
+
+                    runBlocking {
+                        doknotifikasjonStatusConverter.stopPolling()
+                    }
+
                 }
             }
-
-            get("/isReady") {
-                call.respondText(text = "READY", contentType = ContentType.Text.Plain)
+            connector {
+                port = 8080
             }
         }
+    ).start(wait = true)
 
-        this.environment.monitor.subscribe(ApplicationStarted) {
-            doknotifikasjonStatusConverter.startPolling()
-        }
+    embeddedServer(Netty, port = 8080) {
 
-        this.environment.monitor.subscribe(ApplicationStopPreparing) {
-            brukerVarselProducer.shutdown()
-
-            runBlocking {
-                doknotifikasjonStatusConverter.stopPolling()
-            }
-
-        }
     }.start(wait = true)
 }
 
