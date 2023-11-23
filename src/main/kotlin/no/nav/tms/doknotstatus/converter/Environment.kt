@@ -3,7 +3,7 @@ package no.nav.tms.doknotstatus.converter
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig
 import io.confluent.kafka.serializers.KafkaAvroSerializerConfig
 import io.netty.util.NetUtil
-import no.nav.personbruker.dittnav.common.util.config.StringEnvVar.getEnvVar
+import no.nav.tms.common.util.config.StringEnvVar.getEnvVar
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerConfig
