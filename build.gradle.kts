@@ -2,13 +2,17 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    application
     kotlin("jvm").version(Kotlin.version)
+
     id(Shadow.pluginId) version (Shadow.version)
+
+    application
 }
 
-tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "17"
+kotlin {
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
 }
 
 repositories {
@@ -47,5 +51,3 @@ tasks {
         }
     }
 }
-
-apply(plugin = Shadow.pluginId)
