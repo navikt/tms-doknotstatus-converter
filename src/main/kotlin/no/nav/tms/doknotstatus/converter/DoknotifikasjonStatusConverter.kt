@@ -21,6 +21,7 @@ import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
+import java.time.ZonedDateTime
 import kotlin.coroutines.CoroutineContext
 
 class DoknotifikasjonStatusConverter(
@@ -66,6 +67,7 @@ class DoknotifikasjonStatusConverter(
                 val valueNode = objectMapper.valueToTree<ObjectNode>(eksternVarslingStatus)
                 valueNode.put("@event_name", "eksternVarslingStatus")
                 valueNode.put("tidspunkt", record.eventTime().toString())
+                valueNode.put("tidspunktZ", record.zonedEventTime().toString())
 
                 producer.send(
                     ProducerRecord(
@@ -95,6 +97,14 @@ class DoknotifikasjonStatusConverter(
             return LocalDateTime.now(ZoneId.of("UTC"))
         } else {
             LocalDateTime.ofInstant(Instant.ofEpochMilli(timestamp()), ZoneId.of("UTC"))
+        }
+    }
+
+    private fun ConsumerRecord<*, *>.zonedEventTime(): ZonedDateTime {
+        return if (timestampType() == TimestampType.NO_TIMESTAMP_TYPE) {
+            return ZonedDateTime.now(ZoneId.of("Z"))
+        } else {
+            ZonedDateTime.ofInstant(Instant.ofEpochMilli(timestamp()), ZoneId.of("Z"))
         }
     }
 }

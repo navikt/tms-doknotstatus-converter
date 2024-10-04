@@ -1,6 +1,7 @@
 package no.nav.tms.doknotstatus.converter
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
 import no.nav.doknotifikasjon.schemas.DoknotifikasjonStatus
@@ -9,6 +10,8 @@ import org.apache.kafka.clients.consumer.MockConsumer
 import org.apache.kafka.clients.consumer.OffsetResetStrategy
 import org.apache.kafka.common.TopicPartition
 import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
+import java.time.ZonedDateTime
 
 class DoknotifikasjonStatusConverterTest {
 
@@ -58,6 +61,20 @@ class DoknotifikasjonStatusConverterTest {
         eksternVarslingStatusJson["melding"].asText() shouldBe doknotStatus.getMelding()
         eksternVarslingStatusJson["distribusjonsId"].asLong() shouldBe doknotStatus.getDistribusjonId()
         eksternVarslingStatusJson["kanaler"].first().asText() shouldBe "MAIL"
+        eksternVarslingStatusJson["tidspunkt"].let {
+            it.isNull shouldBe false
+            shouldNotThrow<Exception> {
+                LocalDateTime.parse(it.asText())
+            }
+        }
+        eksternVarslingStatusJson["tidspunktZ"].let {
+            it.isNull shouldBe false
+            shouldNotThrow<Exception> {
+                ZonedDateTime.parse(it.asText())
+            }
+        }
+
+
     }
 
     private fun createDoknotifikasjonStatus(
