@@ -68,10 +68,6 @@ fun main() {
             }
         }
     ).start(wait = true)
-
-    embeddedServer(Netty, port = 8080) {
-
-    }.start(wait = true)
 }
 
 private fun KafkaProducer<String, String>.shutdown() {
