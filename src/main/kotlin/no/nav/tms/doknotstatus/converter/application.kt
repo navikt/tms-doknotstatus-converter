@@ -34,44 +34,40 @@ fun main() {
 
     embeddedServer(
         factory = Netty,
-        environment = applicationEngineEnvironment {
-            module {
-                routing {
-                    get("/isAlive") {
-                        if(doknotifikasjonStatusConverter.isAlive()) {
-                            call.respondText(text = "ALIVE", contentType = ContentType.Text.Plain)
-                        } else {
-                            call.respondText(text = "NOTALIVE", contentType = ContentType.Text.Plain, HttpStatusCode.ServiceUnavailable)
-                        }
-                    }
-
-                    get("/isReady") {
-                        call.respondText(text = "READY", contentType = ContentType.Text.Plain)
-                    }
-                }
-
-                this.environment.monitor.subscribe(ApplicationStarted) {
-                    doknotifikasjonStatusConverter.startPolling()
-                }
-
-                this.environment.monitor.subscribe(ApplicationStopPreparing) {
-                    brukerVarselProducer.shutdown()
-
-                    runBlocking {
-                        doknotifikasjonStatusConverter.stopPolling()
-                    }
-
-                }
-            }
+        configure = {
             connector {
                 port = 8080
             }
+        },
+        module = {
+            routing {
+                get("/isAlive") {
+                    if(doknotifikasjonStatusConverter.isAlive()) {
+                        call.respondText(text = "ALIVE", contentType = ContentType.Text.Plain)
+                    } else {
+                        call.respondText(text = "NOTALIVE", contentType = ContentType.Text.Plain, HttpStatusCode.ServiceUnavailable)
+                    }
+                }
+
+                get("/isReady") {
+                    call.respondText(text = "READY", contentType = ContentType.Text.Plain)
+                }
+            }
+
+            this.monitor.subscribe(ApplicationStarted) {
+                doknotifikasjonStatusConverter.startPolling()
+            }
+
+            this.monitor.subscribe(ApplicationStopPreparing) {
+                brukerVarselProducer.shutdown()
+
+                runBlocking {
+                    doknotifikasjonStatusConverter.stopPolling()
+                }
+
+            }
         }
     ).start(wait = true)
-
-    embeddedServer(Netty, port = 8080) {
-
-    }.start(wait = true)
 }
 
 private fun KafkaProducer<String, String>.shutdown() {
