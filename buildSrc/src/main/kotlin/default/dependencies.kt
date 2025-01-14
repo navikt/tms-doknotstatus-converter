@@ -197,12 +197,6 @@ interface PrometheusDefaults: DependencyGroup {
     val exporterCommon get() = dependency("prometheus-metrics-exporter-common")
 }
 
-interface ShadowDefaults: DependencyGroup {
-    override val version get() = "8.1.1"
-
-    val pluginId get() = "com.github.johnrengelman.shadow"
-}
-
 interface TestContainersDefaults: DependencyGroup {
     override val version get() = "1.20.4"
     override val groupId get() = "org.testcontainers"
