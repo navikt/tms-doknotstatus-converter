@@ -2,9 +2,8 @@ package no.nav.tms.doknotstatus.converter
 
 import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient
 import io.confluent.kafka.serializers.KafkaAvroDeserializer
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.apache.kafka.common.errors.SerializationException
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 /**
  * Avro deserialiserer som returnerer `null` hvis den mottar bytes som ikke kan deserialiseres til en Avro-type.
@@ -18,7 +17,7 @@ class SwallowSerializationErrorsAvroDeserializer : KafkaAvroDeserializer {
     constructor(schemaRegistryClient: SchemaRegistryClient) : super(schemaRegistryClient)
     constructor(schemaRegistryClient: SchemaRegistryClient, pros: MutableMap<String, Any>) : super(schemaRegistryClient, pros)
 
-    private val log: Logger = LoggerFactory.getLogger(SwallowSerializationErrorsAvroDeserializer::class.java)
+    private val log = KotlinLogging.logger {}
 
     override fun deserialize(bytes: ByteArray): Any? {
         var result: Any? = null
@@ -26,10 +25,8 @@ class SwallowSerializationErrorsAvroDeserializer : KafkaAvroDeserializer {
             result = super.deserialize(bytes)
 
         } catch (e: SerializationException) {
-            val msg = "Eventet kunne ikke deserialiseres, og blir forkastet. Dette skjedde mest sannsynlig fordi eventet ikke var i henold til Avro-skjemaet for denne topic-en."
-            log.error(msg, e)
+            log.error(e) { "Eventet kunne ikke deserialiseres, og blir forkastet. Dette skjedde mest sannsynlig fordi eventet ikke var i henold til Avro-skjemaet for denne topic-en." }
         }
         return result
     }
-
 }
