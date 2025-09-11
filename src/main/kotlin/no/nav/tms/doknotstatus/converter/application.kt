@@ -1,9 +1,8 @@
 package no.nav.tms.doknotstatus.converter
 
-import io.ktor.server.application.Application
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.server.application.ApplicationStarted
 import io.ktor.server.application.ApplicationStopPreparing
-import io.ktor.server.application.call
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.engine.*
@@ -15,10 +14,8 @@ import kotlinx.coroutines.runBlocking
 import no.nav.doknotifikasjon.schemas.DoknotifikasjonStatus
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
-private val logger: Logger = LoggerFactory.getLogger(Application::class.java)
+private val log = KotlinLogging.logger {}
 
 fun main() {
     val environment = Environment()
@@ -74,8 +71,8 @@ private fun KafkaProducer<String, String>.shutdown() {
     try {
         flush()
         close()
-        logger.info("Produsent for kafka-eventer er flushet og lukket.")
+        log.info { "Produsent for kafka-eventer er flushet og lukket." }
     } catch (e: Exception) {
-        logger.warn("Klarte ikke å flushe og lukke produsent. Det kan være eventer som ikke ble produsert.")
+        log.warn { "Klarte ikke å flushe og lukke produsent. Det kan være eventer som ikke ble produsert." }
     }
 }

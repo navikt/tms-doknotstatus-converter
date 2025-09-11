@@ -28,7 +28,10 @@ dependencies {
     implementation(TmsCommonLib.utils)
     implementation(Avro.avroSerializer)
     implementation(Ktor.Server.netty)
+    implementation(KotlinLogging.logging)
+    implementation(TmsCommonLib.observability)
     implementation(Logstash.logbackEncoder)
+
 
     testImplementation(kotlin("test"))
     testImplementation(Kotest.assertionsCore)

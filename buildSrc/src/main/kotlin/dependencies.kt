@@ -10,7 +10,12 @@ object Avro: DependencyGroup {
 
 object Doknotifikasjon: DependencyGroup {
     override val groupId get() = "no.nav.teamdokumenthandtering"
-    override val version get() = "08c0b2d2"
+    override val version get() = "1.1.6"
 
     val schemas get() = dependency("teamdokumenthandtering-avro-schemas")
+}
+
+object Logback: DependencyGroup {
+    override val version = "1.5.18"
+    val classic = "ch.qos.logback:logback-classic:$version"
 }
