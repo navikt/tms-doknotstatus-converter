@@ -14,8 +14,3 @@ object Doknotifikasjon: DependencyGroup {
 
     val schemas get() = dependency("teamdokumenthandtering-avro-schemas")
 }
-
-object Logback: DependencyGroup {
-    override val version = "1.5.18"
-    val classic = "ch.qos.logback:logback-classic:$version"
-}
