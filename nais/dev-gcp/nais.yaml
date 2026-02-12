@@ -6,8 +6,6 @@ metadata:
   labels:
     team: min-side
 spec:
-  envFrom:
-    - secret: tms-doknotstatus-converter-secrets
   image: {{version}}
   port: 8080
   liveness:
@@ -26,3 +24,10 @@ spec:
       memory: 64Mi
   kafka:
     pool: nav-dev
+  env:
+    - name: BRUKERVARSEL_TOPIC
+      value: min-side.brukervarsel-v1
+    - name: DOKNOTIFIKASJON_STATUS_TOPIC
+      value: teamdokumenthandtering.aapen-dok-notifikasjon-status
+    - name: GROUP_ID_DOKNOTIFIKASJON_STATUS
+      value: dev-tms-doknotstatus-mottak-1
