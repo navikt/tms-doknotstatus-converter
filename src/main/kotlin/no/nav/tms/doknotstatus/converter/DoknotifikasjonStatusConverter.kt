@@ -3,13 +3,13 @@ package no.nav.tms.doknotstatus.converter
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.github.oshai.kotlinlogging.withLoggingContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import no.nav.doknotifikasjon.schemas.DoknotifikasjonStatus
-import no.nav.tms.common.observability.traceVarsel
 import org.apache.kafka.clients.consumer.Consumer
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.ConsumerRecords
@@ -74,7 +74,7 @@ class DoknotifikasjonStatusConverter(
     private fun mapAndSendRecord(record: ConsumerRecord<String, DoknotifikasjonStatus>) {
         val varselId = record.value().getBestillingsId()
 
-        traceVarsel(varselId) {
+        withLoggingContext("minside_id" to varselId) {
             val eksternVarslingStatus = EksternVarslingStatus(record.value())
             val valueNode = objectMapper.valueToTree<ObjectNode>(eksternVarslingStatus)
             valueNode.put("@event_name", "eksternVarslingStatus")
