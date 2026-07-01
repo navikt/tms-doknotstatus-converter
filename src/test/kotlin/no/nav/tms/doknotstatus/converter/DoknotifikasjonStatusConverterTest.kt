@@ -13,16 +13,19 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.time.ZonedDateTime
 
+const val TEST_GROUP_ID = "group_id"
+
 class DoknotifikasjonStatusConverterTest {
 
     private val doknotTopicPartition = TopicPartition("beskjed", 0)
+    private val riverProducer = KafkaTestUtil.createMockProducer<String, String>()
     private val doknotKafkaConsumer = MockConsumer<String, DoknotifikasjonStatus>(OffsetResetStrategy.EARLIEST).also {
         it.subscribe(listOf(doknotTopicPartition.topic()))
         it.rebalance(listOf(doknotTopicPartition))
         it.updateBeginningOffsets(mapOf(doknotTopicPartition to 0))
+        it.schedulePollTask { syncTransaction() }
     }
 
-    private val riverProducer = KafkaTestUtil.createMockProducer<String, String>()
 
     @Test
     fun `Konverter doknotstatus-melding til intern river-melding`() {
@@ -30,7 +33,8 @@ class DoknotifikasjonStatusConverterTest {
             consumer = doknotKafkaConsumer,
             producer = riverProducer,
             doknotifikasjonStatusTopic = "doknotifikasjonStatusTopic",
-            brukervarselTopic = "brukerVarselTopic"
+            brukervarselTopic = "brukerVarselTopic",
+            consumerGroupid = TEST_GROUP_ID
         )
 
         val doknotStatus = createDoknotifikasjonStatus("123")
@@ -91,5 +95,21 @@ class DoknotifikasjonStatusConverterTest {
             .setMelding(melding)
             .setDistribusjonId(distribusjonsId)
             .build()
+    }
+
+    private fun syncTransaction() {
+        val latest = riverProducer.consumerGroupOffsetsHistory()
+            .mapNotNull { it[TEST_GROUP_ID] }
+            .lastOrNull()
+
+        if (latest != null) {
+            doknotKafkaConsumer.commitAsync(latest) { _, _, ->
+                doknotKafkaConsumer.schedulePollTask { syncTransaction() }
+            }
+        } else {
+            doknotKafkaConsumer.commitAsync { _, _, ->
+                doknotKafkaConsumer.schedulePollTask { syncTransaction() }
+            }
+        }
     }
 }

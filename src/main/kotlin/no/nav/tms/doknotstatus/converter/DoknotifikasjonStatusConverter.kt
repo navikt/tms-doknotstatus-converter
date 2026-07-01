@@ -13,8 +13,16 @@ import no.nav.tms.common.observability.traceVarsel
 import org.apache.kafka.clients.consumer.Consumer
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.ConsumerRecords
+import org.apache.kafka.clients.consumer.OffsetAndMetadata
 import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.clients.producer.ProducerRecord
+import org.apache.kafka.clients.producer.RecordMetadata
+import org.apache.kafka.common.KafkaException
+import org.apache.kafka.common.TopicPartition
+import org.apache.kafka.common.errors.ApiException
+import org.apache.kafka.common.errors.AuthenticationException
+import org.apache.kafka.common.errors.OutOfOrderSequenceException
+import org.apache.kafka.common.errors.ProducerFencedException
 import org.apache.kafka.common.errors.RetriableException
 import org.apache.kafka.common.record.TimestampType
 import java.time.Duration
@@ -22,13 +30,15 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import kotlin.collections.set
 import kotlin.coroutines.CoroutineContext
 
 class DoknotifikasjonStatusConverter(
     private val consumer: Consumer<String, DoknotifikasjonStatus>,
     private val producer: Producer<String, String>,
     private val doknotifikasjonStatusTopic: String,
-    private val brukervarselTopic: String
+    private val brukervarselTopic: String,
+    private val consumerGroupid: String
 ) : CoroutineScope {
 
     private val log = KotlinLogging.logger { }
@@ -51,6 +61,7 @@ class DoknotifikasjonStatusConverter(
     }
 
     private fun run() {
+        producer.initTransactions()
         consumer.subscribe(listOf(doknotifikasjonStatusTopic))
         while (job.isActive) {
             onRecords(consumer.poll(Duration.ofSeconds(1)))
@@ -62,12 +73,30 @@ class DoknotifikasjonStatusConverter(
             return // poll returns an empty collection in case of rebalancing
         }
 
+        val transactionOffsets = transactionOffsets(records)
+
+        producer.beginTransaction()
+
         try {
             records.forEach(::mapAndSendRecord)
-            consumer.commitSync()
-        } catch (re: RetriableException) {
-            log.warn(re) { "Polling mot Kafka feilet, ruller tilbake lokalt offset" }
-            consumer.rollbackToLastCommitted()
+            producer.sendOffsetsToTransaction(transactionOffsets, consumerGroupid)
+            producer.commitTransaction()
+        } catch (ke: KafkaException) {
+            when (ke) {
+                is ProducerFencedException, is OutOfOrderSequenceException, is AuthenticationException -> {
+                    log.error { "Fatal feil ved videresending av doknotstatus. Avslutter polling." }
+                    producer.close()
+                    job.cancel()
+                }
+                else -> {
+                    log.warn { "Midlertidig feil ved videresending av doknotstatusa. Ruller tilbake transaksjon og forsøker igjen" }
+                    producer.abortTransaction()
+                }
+            }
+        } catch (e: Exception) {
+            log.error(e) { "Ukjent feil ved videresending av doknotstatus. Avslutter polling" }
+            producer.close()
+            job.cancel()
         }
     }
 
@@ -93,13 +122,18 @@ class DoknotifikasjonStatusConverter(
         }
     }
 
-    private fun <K, V> Consumer<K, V>.rollbackToLastCommitted() {
-        val assignedPartitions = assignment()
-        val partitionCommittedInfo = committed(assignedPartitions)
-        partitionCommittedInfo.forEach { (partition, lastCommitted) ->
-            seek(partition, lastCommitted.offset())
+    private fun transactionOffsets(records: ConsumerRecords<String, DoknotifikasjonStatus>): Map<TopicPartition, OffsetAndMetadata> {
+        val nextOffsets = mutableMapOf<TopicPartition, OffsetAndMetadata>()
+
+        records.forEach { record ->
+            nextOffsets[record.topicPartition()] = OffsetAndMetadata(record.offset() + 1)
         }
+
+        return nextOffsets
     }
+
+    private fun ConsumerRecord<*, *>.topicPartition() = TopicPartition(topic(), partition())
+
 
     private fun ConsumerRecord<*, *>.eventTime(): LocalDateTime {
         return if (timestampType() == TimestampType.NO_TIMESTAMP_TYPE) {
