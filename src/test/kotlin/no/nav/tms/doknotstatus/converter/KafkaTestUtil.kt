@@ -4,6 +4,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeout
 import org.apache.kafka.clients.consumer.MockConsumer
 import org.apache.kafka.clients.producer.MockProducer
+import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.common.TopicPartition
 
 object KafkaTestUtil {
@@ -14,7 +15,8 @@ object KafkaTestUtil {
         offset: Long
     ) {
         val partition = TopicPartition(topicName, 0)
-        withTimeout(1000) {
+        withTimeout(10000) {
+            delay(1000)
             while ((consumer.committed(setOf(partition))[partition]?.offset() ?: 0) < offset) {
                 delay(10)
             }

@@ -26,7 +26,8 @@ fun main() {
         consumer = doknotConsumer,
         producer = brukerVarselProducer,
         brukervarselTopic = environment.brukervarselTopic,
-        doknotifikasjonStatusTopic = environment.doknotifikasjonStatusTopicName
+        doknotifikasjonStatusTopic = environment.doknotifikasjonStatusTopicName,
+        consumerGroupid = environment.doknotifikasjonStatusGroupId
     )
 
     embeddedServer(
