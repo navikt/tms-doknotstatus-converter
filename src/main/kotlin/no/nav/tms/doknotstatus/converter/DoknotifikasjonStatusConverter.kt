@@ -10,38 +10,32 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import no.nav.doknotifikasjon.schemas.DoknotifikasjonStatus
+import no.nav.tms.common.logging.TeamLogs
+import no.nav.tms.kafka.producer.ProducerSendUtils.transactional
+import no.nav.tms.kafka.producer.RetriableSendException
 import org.apache.kafka.clients.consumer.Consumer
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.ConsumerRecords
-import org.apache.kafka.clients.consumer.OffsetAndMetadata
 import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.clients.producer.ProducerRecord
-import org.apache.kafka.clients.producer.RecordMetadata
-import org.apache.kafka.common.KafkaException
-import org.apache.kafka.common.TopicPartition
-import org.apache.kafka.common.errors.ApiException
-import org.apache.kafka.common.errors.AuthenticationException
-import org.apache.kafka.common.errors.OutOfOrderSequenceException
-import org.apache.kafka.common.errors.ProducerFencedException
-import org.apache.kafka.common.errors.RetriableException
 import org.apache.kafka.common.record.TimestampType
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
-import kotlin.collections.set
 import kotlin.coroutines.CoroutineContext
 
 class DoknotifikasjonStatusConverter(
     private val consumer: Consumer<String, DoknotifikasjonStatus>,
     private val producer: Producer<String, String>,
     private val doknotifikasjonStatusTopic: String,
-    private val brukervarselTopic: String,
-    private val consumerGroupid: String
+    private val brukervarselTopic: String
 ) : CoroutineScope {
 
     private val log = KotlinLogging.logger { }
+    private val teamLog = TeamLogs.logger { }
+
     private val objectMapper = ObjectMapper()
 
     override val coroutineContext: CoroutineContext
@@ -73,34 +67,27 @@ class DoknotifikasjonStatusConverter(
             return // poll returns an empty collection in case of rebalancing
         }
 
-        val transactionOffsets = transactionOffsets(records)
-
-        producer.beginTransaction()
-
         try {
-            records.forEach(::mapAndSendRecord)
-            producer.sendOffsetsToTransaction(transactionOffsets, consumerGroupid)
-            producer.commitTransaction()
-        } catch (ke: KafkaException) {
-            when (ke) {
-                is ProducerFencedException, is OutOfOrderSequenceException, is AuthenticationException -> {
-                    log.error { "Fatal feil ved videresending av doknotstatus. Avslutter polling." }
-                    producer.close()
-                    job.cancel()
-                }
-                else -> {
-                    log.warn { "Midlertidig feil ved videresending av doknotstatusa. Ruller tilbake transaksjon og forsøker igjen" }
-                    producer.abortTransaction()
+            producer.transactional(records, consumer) {
+                records.forEach {
+                    val internalRecord = mapRecord(it)
+
+                    sendInTransaction(internalRecord)
                 }
             }
+        } catch (rse: RetriableSendException) {
+            log.warn { "Midlertidig feil ved videresending av doknotstatus. Forsøker igjen senere." }
+            teamLog.warn(rse) { "Midlertidig feil ved videresending av doknotstatus. Forsøker igjen senere." }
         } catch (e: Exception) {
-            log.error(e) { "Ukjent feil ved videresending av doknotstatus. Avslutter polling" }
+            log.error { "Feil ved videresending av doknotstatus. Avslutter polling" }
+            teamLog.error(e) { "Feil ved videresending av doknotstatus. Avslutter polling" }
+
             producer.close()
             job.cancel()
         }
     }
 
-    private fun mapAndSendRecord(record: ConsumerRecord<String, DoknotifikasjonStatus>) {
+    private fun mapRecord(record: ConsumerRecord<String, DoknotifikasjonStatus>): ProducerRecord<String, String> {
         val varselId = record.value().getBestillingsId()
 
         withLoggingContext("minside_id" to varselId) {
@@ -112,28 +99,13 @@ class DoknotifikasjonStatusConverter(
 
             log.info { "Konverterer doknot-status [${eksternVarslingStatus.status}] til internt event" }
 
-            producer.send(
-                ProducerRecord(
-                    brukervarselTopic,
-                    varselId,
-                    valueNode.toString()
-                )
+            return ProducerRecord(
+                brukervarselTopic,
+                varselId,
+                valueNode.toString()
             )
         }
     }
-
-    private fun transactionOffsets(records: ConsumerRecords<String, DoknotifikasjonStatus>): Map<TopicPartition, OffsetAndMetadata> {
-        val nextOffsets = mutableMapOf<TopicPartition, OffsetAndMetadata>()
-
-        records.forEach { record ->
-            nextOffsets[record.topicPartition()] = OffsetAndMetadata(record.offset() + 1)
-        }
-
-        return nextOffsets
-    }
-
-    private fun ConsumerRecord<*, *>.topicPartition() = TopicPartition(topic(), partition())
-
 
     private fun ConsumerRecord<*, *>.eventTime(): LocalDateTime {
         return if (timestampType() == TimestampType.NO_TIMESTAMP_TYPE) {

@@ -29,8 +29,12 @@ dependencies {
     implementation(Avro.avroSerializer)
     implementation(Ktor.Server.netty)
     implementation(KotlinLogging.logging)
+    implementation(Prometheus.metricsCore)
+    implementation(Prometheus.exporterCommon)
     implementation(TmsCommonLib.observability)
+    implementation(TmsCommonLib.teamLogger)
     implementation(Logstash.logbackEncoder)
+    implementation(TmsKafkaTools.kafkaProducerUtils)
 
 
     testImplementation(kotlin("test"))

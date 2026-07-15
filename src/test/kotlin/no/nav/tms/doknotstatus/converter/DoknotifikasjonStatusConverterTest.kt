@@ -18,7 +18,7 @@ const val TEST_GROUP_ID = "group_id"
 class DoknotifikasjonStatusConverterTest {
 
     private val doknotTopicPartition = TopicPartition("beskjed", 0)
-    private val riverProducer = KafkaTestUtil.createMockProducer<String, String>()
+    private val mockProducer = KafkaTestUtil.createMockProducer<String, String>()
     private val doknotKafkaConsumer = MockConsumer<String, DoknotifikasjonStatus>(OffsetResetStrategy.EARLIEST).also {
         it.subscribe(listOf(doknotTopicPartition.topic()))
         it.rebalance(listOf(doknotTopicPartition))
@@ -31,10 +31,9 @@ class DoknotifikasjonStatusConverterTest {
     fun `Konverter doknotstatus-melding til intern river-melding`() {
         val doknotifikasjonStatusConverter = DoknotifikasjonStatusConverter(
             consumer = doknotKafkaConsumer,
-            producer = riverProducer,
+            producer = mockProducer,
             doknotifikasjonStatusTopic = "doknotifikasjonStatusTopic",
-            brukervarselTopic = "brukerVarselTopic",
-            consumerGroupid = TEST_GROUP_ID
+            brukervarselTopic = "brukerVarselTopic"
         )
 
         val doknotStatus = createDoknotifikasjonStatus("123")
@@ -55,8 +54,8 @@ class DoknotifikasjonStatusConverterTest {
             doknotifikasjonStatusConverter.stopPolling()
         }
 
-        riverProducer.history().size shouldBe 1
-        val eksternVarslingStatusJson = ObjectMapper().readTree(riverProducer.history().first().value())
+        mockProducer.history().size shouldBe 1
+        val eksternVarslingStatusJson = ObjectMapper().readTree(mockProducer.history().first().value())
         eksternVarslingStatusJson.has("@event_name") shouldBe true
         eksternVarslingStatusJson["@event_name"].asText() shouldBe "eksternVarslingStatus"
         eksternVarslingStatusJson["eventId"].asText() shouldBe doknotStatus.getBestillingsId()
@@ -98,7 +97,7 @@ class DoknotifikasjonStatusConverterTest {
     }
 
     private fun syncTransaction() {
-        val latest = riverProducer.consumerGroupOffsetsHistory()
+        val latest = mockProducer.consumerGroupOffsetsHistory()
             .mapNotNull { it[TEST_GROUP_ID] }
             .lastOrNull()
 
