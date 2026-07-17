@@ -14,6 +14,9 @@ spec:
     path: /isAlive
   readiness:
     path: /isReady
+  prometheus:
+    enabled: true
+    path: /metrics
   replicas:
     min: 1
     max: 1
