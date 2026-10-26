@@ -137,7 +137,7 @@ class DoknotifikasjonStatusConverter(
 
     private fun ConsumerRecord<*, *>.eventTime(): LocalDateTime {
         return if (timestampType() == TimestampType.NO_TIMESTAMP_TYPE) {
-            return LocalDateTime.now(ZoneId.of("UTC"))
+            LocalDateTime.now(ZoneId.of("UTC"))
         } else {
             LocalDateTime.ofInstant(Instant.ofEpochMilli(timestamp()), ZoneId.of("UTC"))
         }
@@ -145,7 +145,7 @@ class DoknotifikasjonStatusConverter(
 
     private fun ConsumerRecord<*, *>.zonedEventTime(): ZonedDateTime {
         return if (timestampType() == TimestampType.NO_TIMESTAMP_TYPE) {
-            return ZonedDateTime.now(ZoneId.of("Z"))
+            ZonedDateTime.now(ZoneId.of("Z"))
         } else {
             ZonedDateTime.ofInstant(Instant.ofEpochMilli(timestamp()), ZoneId.of("Z"))
         }

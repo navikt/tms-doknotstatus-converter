@@ -64,7 +64,6 @@ class DoknotifikasjonStatusConverterTest {
         eksternVarslingStatusJson["status"].asText() shouldBe doknotStatus.getStatus()
         eksternVarslingStatusJson["melding"].asText() shouldBe doknotStatus.getMelding()
         eksternVarslingStatusJson["distribusjonsId"].asLong() shouldBe doknotStatus.getDistribusjonId()
-        eksternVarslingStatusJson["kanaler"].first().asText() shouldBe "MAIL"
         eksternVarslingStatusJson["tidspunkt"].let {
             it.isNull shouldBe false
             shouldNotThrow<Exception> {
@@ -86,6 +85,7 @@ class DoknotifikasjonStatusConverterTest {
         bestiller: String = "dummyBestiller",
         status: String = "INFO",
         melding: String = "notifikasjon sendt via mail",
+        kanal: String = "mail",
         distribusjonsId: Long = 1L
     ): DoknotifikasjonStatus {
         return DoknotifikasjonStatus.newBuilder()
@@ -93,6 +93,7 @@ class DoknotifikasjonStatusConverterTest {
             .setBestillerId(bestiller)
             .setStatus(status)
             .setMelding(melding)
+            .setKanal(kanal)
             .setDistribusjonId(distribusjonsId)
             .build()
     }

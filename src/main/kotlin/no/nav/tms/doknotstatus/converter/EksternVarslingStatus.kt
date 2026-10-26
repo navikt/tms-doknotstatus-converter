@@ -8,7 +8,6 @@ data class EksternVarslingStatus(
     val status: String,
     val melding: String,
     val distribusjonsId: Long?,
-    val kanaler: List<String>,
     val kanal: String?
 ) {
     constructor(doknotifikasjonStatus: DoknotifikasjonStatus) : this(
@@ -17,19 +16,6 @@ data class EksternVarslingStatus(
         status = doknotifikasjonStatus.getStatus(),
         melding = doknotifikasjonStatus.getMelding(),
         distribusjonsId = doknotifikasjonStatus.getDistribusjonId(),
-        kanaler = getKanaler(doknotifikasjonStatus),
-        kanal = parseKanal(doknotifikasjonStatus.getMelding())
+        kanal = doknotifikasjonStatus.kanal?.uppercase()
     )
-
-    companion object {
-        private fun getKanaler(external: DoknotifikasjonStatus): List<String> =
-            listOfNotNull(parseKanal(external.getMelding()))
-
-        private fun parseKanal(melding: String): String? {
-            val kanalMeldingPattern = "notifikasjon sendt via (\\w+)".toRegex()
-            return kanalMeldingPattern.find(melding)?.destructured?.let { (kanal) ->
-                kanal.uppercase()
-            }
-        }
-    }
 }
