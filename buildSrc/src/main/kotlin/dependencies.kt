@@ -10,7 +10,7 @@ object Avro: DependencyGroup {
 
 object Doknotifikasjon: DependencyGroup {
     override val groupId get() = "no.nav.teamdokumenthandtering"
-    override val version get() = "2.0.0"
+    override val version get() = "1.1.11"
 
     val schemas get() = dependency("teamdokumenthandtering-avro-schemas")
 }
