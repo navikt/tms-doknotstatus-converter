@@ -45,20 +45,6 @@ data class Environment(
         }
     }
 
-    fun producerProps(): Properties {
-        return Properties().apply {
-            put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBrokers)
-            put(ProducerConfig.CLIENT_ID_CONFIG, "tms-doknotstatus-converter" + NetUtil.getHostname(InetSocketAddress(0)))
-            put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer::class.java)
-            put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer::class.java)
-            put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 40000)
-            put(ProducerConfig.ACKS_CONFIG, "all")
-            put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true")
-            put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, transactionalId)
-            putAll(credentialPropskafka())
-        }
-    }
-
     private fun credentialPropskafka(): Properties {
         return Properties().apply {
             put(KafkaAvroSerializerConfig.USER_INFO_CONFIG, "${kafkaSchemaRegistryUser}:${kafkaSchemaRegistryPassword}")
