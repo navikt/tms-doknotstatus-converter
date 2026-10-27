@@ -3,7 +3,8 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 plugins {
     kotlin("jvm").version(managed.versions.kotlin)
 
-    id("no.nav.tms.jarBundling") version "0.1.0"
+    alias(managed.plugins.tms.jarBundling)
+
     application
 }
 
