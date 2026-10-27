@@ -33,17 +33,8 @@ dependencies {
     implementation(managed.prometheus.exporter)
     implementation(managed.tms.kafka.producerUtils)
     implementation(managed.logback.encoder)
-    implementation(libs.avro.schemaRegistry)
     implementation(libs.avro.serializer)
     implementation(libs.nav.doknotifikasjon)
-
-    /*
-    Har funka før
-    implementation(Doknotifikasjon.schemas)
-    implementation(Avro.schemaRegistry)
-    implementation(Avro.avroSerializer)
-    */
-
 
     testImplementation(kotlin("test"))
     testImplementation(managed.bundles.kotest)
