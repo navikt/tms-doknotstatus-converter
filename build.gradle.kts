@@ -1,10 +1,9 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 
 plugins {
-    kotlin("jvm").version(Kotlin.version)
+    kotlin("jvm").version(managed.versions.kotlin)
 
-    id(TmsJarBundling.plugin)
-
+    id("no.nav.tms.jarBundling") version "0.1.0"
     application
 }
 
@@ -24,22 +23,30 @@ repositories {
 }
 
 dependencies {
+
+    implementation(managed.tms.commonLib.utils)
+    implementation(managed.tms.commonLib.observability)
+    implementation(managed.tms.commonLib.teamLogger)
+    implementation(managed.ktor.server.netty)
+    implementation(managed.kotlinLogging)
+    implementation(managed.prometheus.metric.core)
+    implementation(managed.prometheus.exporter)
+    implementation(managed.tms.kafka.producerUtils)
+    implementation(managed.logback.encoder)
+    implementation(libs.avro.schemaRegistry)
+    implementation(libs.avro.serializer)
+    implementation(libs.nav.doknotifikasjon)
+
+    /*
+    Har funka før
     implementation(Doknotifikasjon.schemas)
-    implementation(TmsCommonLib.utils)
+    implementation(Avro.schemaRegistry)
     implementation(Avro.avroSerializer)
-    implementation(Ktor.Server.netty)
-    implementation(KotlinLogging.logging)
-    implementation(Prometheus.metricsCore)
-    implementation(Prometheus.exporterCommon)
-    implementation(TmsCommonLib.observability)
-    implementation(TmsCommonLib.teamLogger)
-    implementation(Logstash.logbackEncoder)
-    implementation(TmsKafkaTools.kafkaProducerUtils)
+    */
 
 
     testImplementation(kotlin("test"))
-    testImplementation(Kotest.assertionsCore)
-    testImplementation(Kotest.runnerJunit5)
+    testImplementation(managed.bundles.kotest)
 }
 
 application {
