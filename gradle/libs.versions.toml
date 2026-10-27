@@ -1,0 +1,10 @@
+[versions]
+avro = "6.2.1"
+
+
+[libraries]
+
+avro-serializer = { group = "io.confluent", name = "kafka-avro-serializer", version.ref = "avro" }
+avro-schemaRegistry = { group = "io.confluent", name = "kafka-schema-registry", version.ref = "avro" }
+nav-doknotifikasjon = { group = "no.nav.teamdokumenthandtering", name="teamdokumenthandtering-avro-schemas", version="1.1.11"}
+
