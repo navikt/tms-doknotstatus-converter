@@ -1,5 +1,5 @@
 [versions]
-avro = "6.2.1"
+avro = "8.4.0"
 
 
 [libraries]

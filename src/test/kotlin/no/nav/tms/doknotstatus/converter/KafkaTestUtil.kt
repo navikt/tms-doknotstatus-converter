@@ -4,7 +4,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeout
 import org.apache.kafka.clients.consumer.MockConsumer
 import org.apache.kafka.clients.producer.MockProducer
-import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.common.TopicPartition
 
 object KafkaTestUtil {
@@ -26,6 +25,7 @@ object KafkaTestUtil {
     fun <K, V> createMockProducer(): MockProducer<K, V> {
         return MockProducer(
             false,
+            null,
             { _: String, _: K -> ByteArray(0) }, //Dummy serializers
             { _: String, _: V -> ByteArray(0) }
         )
