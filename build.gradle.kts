@@ -25,20 +25,23 @@ repositories {
 
 dependencies {
 
+    runtimeOnly(managed.tms.commonLib.observability)
+    runtimeOnly(managed.logback.encoder)
+
     implementation(managed.tms.commonLib.utils)
-    implementation(managed.tms.commonLib.observability)
     implementation(managed.tms.commonLib.teamLogger)
     implementation(managed.ktor.server.netty)
     implementation(managed.kotlinLogging)
-    implementation(managed.prometheus.metric.core)
     implementation(managed.prometheus.exporter)
     implementation(managed.tms.kafka.producerUtils)
-    implementation(managed.logback.encoder)
     implementation(libs.avro.serializer)
     implementation(libs.nav.doknotifikasjon)
 
-    testImplementation(kotlin("test"))
-    testImplementation(managed.bundles.kotest)
+    testRuntimeOnly(managed.junit.launcher)
+    testRuntimeOnly(managed.junit.engine)
+
+    testImplementation(managed.junit.api)
+    testImplementation(managed.kotest.assertion)
 }
 
 application {
